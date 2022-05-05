@@ -3,12 +3,11 @@ package study.querydsl.entity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.assertj.core.api.Assertions;
-import org.h2.engine.User;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,7 +18,6 @@ import study.querydsl.Dto.UserDto;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 import java.util.List;
 
@@ -173,7 +171,7 @@ public class QuerydslBasicTest {
                 .fetch();
 
         Tuple tuple = fetch.get(0);
-        assertThat(tuple.get(member.age.count())).isEqualTo(4);
+        AssertionsForClassTypes.assertThat(tuple.get(member.age.count())).isEqualTo(4);
         System.out.println("age_count = " + member.age.count());
     }
 

@@ -2,8 +2,8 @@ package study.querydsl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +34,7 @@ class QuerydslApplicationTests {
 				.fetchOne();
 
 		Assertions.assertThat(result).isEqualTo(hello);
-		Assertions.assertThat(result.getId()).isEqualTo(hello.getId());
+        AssertionsForClassTypes.assertThat(result.getId()).isEqualTo(hello.getId());
 	}
 
 }
