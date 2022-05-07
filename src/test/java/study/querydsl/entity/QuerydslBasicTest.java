@@ -3,7 +3,9 @@ package study.querydsl.entity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.assertj.core.api.Assertions;
@@ -11,6 +13,7 @@ import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.annotation.Rollback;
 import study.querydsl.Dto.MemberDto;
 import study.querydsl.Dto.QMemberDto;
@@ -150,14 +153,15 @@ public class QuerydslBasicTest {
         QueryResults<Member> queryResults = jpaQueryFactory
                 .selectFrom(member)
                 .orderBy(member.username.desc())
-                .offset(1)
-                .limit(2)
+                .offset(1) // 3
+                .limit(2) // 3 4
                 .fetchResults();
-
+        //member4, 3, 2, 1
         Assertions.assertThat(queryResults.getTotal()).isEqualTo(4);
         Assertions.assertThat(queryResults.getLimit()).isEqualTo(2);
         Assertions.assertThat(queryResults.getOffset()).isEqualTo(1);
         Assertions.assertThat(queryResults.getResults().size()).isEqualTo(2);
+
     }
 
     @Test
@@ -188,7 +192,7 @@ public class QuerydslBasicTest {
                 .fetch();
 
         for (Member member1 : teamA) {
-            System.out.println(member1.getUsername());
+            System.out.println(member1);
         }
     }
 
@@ -263,6 +267,7 @@ public class QuerydslBasicTest {
                 .join(member.team, team).fetchJoin()
                 .where(member.username.eq("member1"))
                 .fetchOne();
+        System.out.println(fetchOne);
     }
 
     /**
@@ -334,14 +339,14 @@ public class QuerydslBasicTest {
 
     @Test
     public void simpleProjection() throws Exception {
-        jpaQueryFactory
+        List<Tuple> fetch = jpaQueryFactory
                 .select(member.username, member.age, member.id)
                 .from(member)
                 .fetch();
     }
 
     @Test
-    public void findDtoBySetter() throws Exception {
+    public void findDtoByFields() throws Exception {
         List<MemberDto> result = jpaQueryFactory
                 .select(Projections.fields(MemberDto.class,
                         member.username,
@@ -401,4 +406,52 @@ public class QuerydslBasicTest {
                 .where(builder)
                 .fetch();
     }
+    
+    @Test
+    public void dynamicQuery_where() throws Exception {
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+
+        List<Member> result = searchMember2(usernameParam, ageParam);
+    }
+
+    private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+        return jpaQueryFactory
+                .selectFrom(member)
+                .where(allEq(usernameCond, ageCond))
+                .fetch();
+    }
+
+    private BooleanExpression ageEq(Integer ageCond) {
+        return ageCond == null ? null : member.age.eq(ageCond);
+    }
+
+    private BooleanExpression usernameEq(String usernameCond) {
+        return usernameCond == null ? null : member.username.eq(usernameCond);
+    }
+
+    private BooleanExpression allEq(String usernameCond, Integer ageCond) {
+        return usernameEq(usernameCond).and(ageEq(ageCond));
+    }
+
+    @Test
+    public void bulkUpdate() throws Exception {
+        // mem1 = 10 -> 비회원
+        // mem2 = 20 -> 비회원
+
+        long cnt = jpaQueryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+
+//        em.flush();
+//        em.clear();
+
+        List<Member> fetch = jpaQueryFactory
+                .selectFrom(member)
+                .fetch();
+        System.out.println(fetch);
+    }
+
 }
